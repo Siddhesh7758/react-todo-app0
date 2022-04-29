@@ -1,55 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import Todo from './Todo';
-import { Button, FormControl, InputLabel, Input } from '@material-ui/core';
 import './App.css';
-import db from './firebase';
+import HomePage from './components/HomePage';
+import Login from './components/Login';
+import SignUp from './components/SignUp';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
+import { auth } from "./firebase";
+import {onAuthStateChanged} from "firebase/auth";
+import { useEffect, useState } from 'react';
 
 
 function App() {
+   
+  const [user, setUser] = useState(null);
 
-  const [todos, setTodos] = useState([]);
-  const [input, setInput] = useState('');
-
-  //
-  useEffect(() => {
-    db.collection('todos').onSnapshot(snapshot => {
-      setTodos(snapshot.docs.map(doc => doc.data().Task))
-    })
-  }, []);
-
-
-  const addTodo = (event) => {
-    //this will called when we click the button
-    event.preventDefault();     //it stops refreshing the page
-    setTodos([...todos, input]);
-    setInput('');  //clear the input field
-  }
-
-  return (
-    <div className="App">
-      <h1>Hello world!</h1>
-      <form>
-        
-        <FormControl>
-          <InputLabel>Enter a Todo</InputLabel>
-          <Input value={input} onChange={event => setInput(event.target.value)} />
-        </FormControl>
-        <Button disabled={!input} type="submit" onClick={addTodo} variant="contained" color="primary">
-          Add Task
-        </Button>
-      </form>
+  useEffect(() => { 
+    onAuthStateChanged(auth, user => { 
+      if (user) {
+        setUser(user);
+      }
+      else {
+        setUser(null);
+      }
+    });
     
+  },[])
+
+
+   return (
+     <div className='App'>
+       <Router>
+       <Routes>
+         <Route exact path="/" element={<HomePage user={user} />}>
+          </Route>
+          <Route path="/signup" element={<SignUp />}>
+          </Route>
+          <Route path="/login" element={<Login />}>
+          </Route>
+        </Routes>
+      </Router>
+     </div>
       
-      <ul>
-        {todos.map(todo => (
-          <Todo text={todo} />
-
-          //<li>{todo}</li>
-        ))}
-      </ul>
-    </div>
-
-    
+  
   );
 }
 
